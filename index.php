@@ -52,6 +52,8 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             const btn = document.getElementById("btn");
             btn.innerHTML="Gak bisa diklik";
+            btn.setAttribute('style','cursor: not-allowed;')
+            btn.removeAttribute('onclick')
         });
     </script>
     <script>
@@ -64,61 +66,78 @@
 
     let idleTimer;
 
-    container.addEventListener("mousemove", (e) => {
-    clearTimeout(idleTimer);
-
-    const rect = btn.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
     // ======================
-    // 1. Tombol kabur
+    // 🔥 LOGIKA ASLI (tidak diubah)
     // ======================
-    const btnCenterX = rect.left + rect.width / 2;
-    const btnCenterY = rect.top + rect.height / 2;
+    function handleMove(e) {
+        clearTimeout(idleTimer);
 
-    const distance = Math.hypot(
-        mouseX - btnCenterX,
-        mouseY - btnCenterY
-    );
+        const rect = btn.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
 
-    if (distance < 100) {
-        const maxX = container.clientWidth - btn.offsetWidth;
-        const maxY = container.clientHeight - btn.offsetHeight;
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
 
-        btn.style.left = Math.random() * maxX + "px";
-        btn.style.top = Math.random() * maxY + "px";
+        // ======================
+        // 1. Tombol kabur
+        // ======================
+        const btnCenterX = rect.left + rect.width / 2;
+        const btnCenterY = rect.top + rect.height / 2;
+
+        const distance = Math.hypot(
+            mouseX - btnCenterX,
+            mouseY - btnCenterY
+        );
+
+        if (distance < 100) {
+            const maxX = container.clientWidth - btn.offsetWidth;
+            const maxY = container.clientHeight - btn.offsetHeight;
+
+            btn.style.left = Math.random() * maxX + "px";
+            btn.style.top = Math.random() * maxY + "px";
+        }
+
+        // ======================
+        // 2. Idle → balik
+        // ======================
+        idleTimer = setTimeout(() => {
+
+            const startArea = {
+                left: containerRect.left + initialX,
+                right: containerRect.left + initialX + btn.offsetWidth,
+                top: containerRect.top + initialY,
+                bottom: containerRect.top + initialY + btn.offsetHeight
+            };
+
+            const isCursorInStartArea =
+                mouseX >= startArea.left &&
+                mouseX <= startArea.right &&
+                mouseY >= startArea.top &&
+                mouseY <= startArea.bottom;
+
+            if (!isCursorInStartArea) {
+                btn.style.left = initialX + "px";
+                btn.style.top = initialY + "px";
+            }
+
+        }, 800);
     }
 
     // ======================
-    // 2. Idle → balik (dengan pengecekan)
+    // ✅ POINTER EVENTS (SEMUA DEVICE)
     // ======================
-    idleTimer = setTimeout(() => {
+    container.addEventListener("pointermove", handleMove);
+    container.addEventListener("pointerdown", handleMove);
 
-        // area posisi awal tombol
-        const startArea = {
-        left: containerRect.left + initialX,
-        right: containerRect.left + initialX + btn.offsetWidth,
-        top: containerRect.top + initialY,
-        bottom: containerRect.top + initialY + btn.offsetHeight
-        };
+    // ======================
+    // ❌ Anti klik total
+    // ======================
+    btn.addEventListener("click", (e) => {
+        e.preventDefault();
+    });
 
-        const isCursorInStartArea =
-        mouseX >= startArea.left &&
-        mouseX <= startArea.right &&
-        mouseY >= startArea.top &&
-        mouseY <= startArea.bottom;
-
-        // hanya balik kalau kursor TIDAK di situ
-        if (!isCursorInStartArea) {
-        btn.style.left = initialX + "px";
-        btn.style.top = initialY + "px";
-        }
-
-    }, 800); // idle delay
-
+    btn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
     });
     </script>
 
